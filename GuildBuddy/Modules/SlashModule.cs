@@ -22,20 +22,10 @@ namespace GuildBuddy.Modules
         [SlashCommand("createattendevent", "Creates an attendance event")]
         public async Task CreateAttendanceEvent(InteractionContext ctx, [Option("eventname", "The name of the attendance event you want to create")] string eventName)
         {
-            Console.WriteLine("wtf man");
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder()
+                .AddEmbed(new DiscordEmbedBuilder().WithTitle($"{eventName}(0)").WithFooter("Click Attend to join the event"))
                 .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "attend_event", "Attend"))
-                .WithContent("test")
-                );
-        }
-
-        [SlashCommand("test", "test")]
-        public async Task Test(InteractionContext ctx)
-        {
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder()
-                .WithContent("Method: test")
                 );
         }
     }
