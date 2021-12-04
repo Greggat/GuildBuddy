@@ -13,11 +13,13 @@ namespace GuildBuddy.Services
     {
         private DiscordClient _client;
         private Dictionary<ulong, HashSet<ulong>> _events;
+        private Dictionary<ulong, string> _cachedAttendeeMentions;
 
         public AttendenceEventService(DiscordClient client)
         {
             _client = client;
             _events = new Dictionary<ulong, HashSet<ulong>>();
+            _cachedAttendeeMentions = new Dictionary<ulong, string>();
 
             _client.ComponentInteractionCreated += OnComponentInteractionCreated;
         }
@@ -27,8 +29,18 @@ namespace GuildBuddy.Services
             List<string> result = new List<string>();
             foreach(var id in attendeeIds)
             {
-                var user = await _client.GetUserAsync(id);
-                result.Add(user.Username);
+                if (_cachedAttendeeMentions.TryGetValue(id, out var mention))
+                {
+                    result.Add(mention);
+                }
+                else
+                {
+                    //Shouldn't ever happen. TODO: log this anomoly?
+                    var user = await _client.GetUserAsync(id);
+                    _cachedAttendeeMentions.TryAdd(user.Id, user.Mention);
+                    result.Add(user.Mention);
+                }
+                
             }
             return result;
         }
@@ -44,17 +56,20 @@ namespace GuildBuddy.Services
                 }
                 if(attendingUsers.Add(e.User.Id))
                 {
+                    _cachedAttendeeMentions.TryAdd(e.User.Id, e.User.Mention);
+
                     var attendees = await GetAttendeesNames(attendingUsers);
                     var title = e.Message.Embeds[0].Title;
                     title = title.Substring(0, title.Length - 2 - (attendees.Count / 10 + 1));
+
                     var eb = new DiscordEmbedBuilder()
                     .WithTitle($"{title}({attendees.Count})")
                     .WithFooter(e.Message.Embeds[0].Footer.Text)
-                    .WithDescription(String.Join(",", attendees));
+                    .WithDescription(string.Join(", ", attendees));
+
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
                         new DiscordInteractionResponseBuilder()
                             .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "attend_event", "Attend"))
-                            .WithContent(e.User.Username)
                             .AddEmbed(eb.Build())
                         );
 

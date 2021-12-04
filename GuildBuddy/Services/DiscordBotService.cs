@@ -37,6 +37,7 @@ namespace GuildBuddy.Services
             });
 
             slash.RegisterCommands<SlashModule>(688586051563946008);
+            slash.RegisterCommands<AuctionSlashModule>(688586051563946008);
 
             await _discord.ConnectAsync();
         }
