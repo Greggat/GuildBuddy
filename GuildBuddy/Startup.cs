@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.SQLite;
 using Hangfire.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DSharpPlus;
 using GuildBuddy.Services;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using System.Reflection;
 
 namespace GuildBuddy
 {
@@ -43,6 +48,8 @@ namespace GuildBuddy
 
         private void ConfigureServices(IServiceCollection services)
         {
+            var dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
             services.AddSingleton(new DiscordClient(new DiscordConfiguration
             {
                 Token = Configuration.GetValue<string>("tokens:discord"),
@@ -51,24 +58,21 @@ namespace GuildBuddy
             }))
             .AddSingleton(Configuration)            // Add the configuration to the collection
             .AddSingleton<AttendenceEventService>()
+            .AddSingleton<AuctionService>()
 
-            .AddHostedService<DiscordBotService>();
+            .AddHostedService<DiscordBotService>()
 
-            //Add Hangfire
-            /*.AddHangfire(opt =>
+            //Add Hangfire'
+            .AddHangfire(opt =>
              opt.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseColouredConsoleLogProvider()
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UsePostgreSqlStorage(
-                $"User ID={Configuration["db_id"]};" +
-                $"Password={Configuration["db_pw"]};" +
-                $"Host={Configuration["db_host"]};" +
-                $"Port={Configuration["db_port"]};" +
-                $"Database={Configuration["db_name"]};" +
-                "Pooling=true;")
+                .UseSQLiteStorage("Data Source=" + Path.Join(dir, "hangfire.db") + ";")
             )
-            .AddHangfireServer();*/
+            .AddHangfireServer();
+
+            
         }
     }
 }

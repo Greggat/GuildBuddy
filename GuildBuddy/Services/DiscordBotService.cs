@@ -1,4 +1,7 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using GuildBuddy.Modules;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +32,16 @@ namespace GuildBuddy.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            _provider.GetService(typeof(AuctionService));
             _provider.GetService(typeof(AttendenceEventService)); //Initialize Attendance Event Service
+
+            _discord.UseInteractivity(new InteractivityConfiguration()
+            {
+                PollBehaviour = PollBehaviour.KeepEmojis,
+                Timeout = TimeSpan.FromSeconds(30),
+                AckPaginationButtons = true
+            });
+
 
             var slash = _discord.UseSlashCommands(new SlashCommandsConfiguration
             {

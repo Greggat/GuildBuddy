@@ -75,10 +75,12 @@ namespace GuildBuddy.Services
 
                     return;
                 }
+                else
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                        new DiscordInteractionResponseBuilder().AsEphemeral(true).WithContent("You are already attending this event!"));
+                }
             }
-
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                  new DiscordInteractionResponseBuilder().AsEphemeral(true).WithContent("You are already attending this event!"));
         }
     }
 }
