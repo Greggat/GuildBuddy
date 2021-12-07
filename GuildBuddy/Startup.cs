@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Hangfire;
-using Hangfire.SQLite;
 using Hangfire.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +11,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using System.Reflection;
+using Hangfire.Storage.SQLite;
 
 namespace GuildBuddy
 {
@@ -64,11 +64,14 @@ namespace GuildBuddy
 
             //Add Hangfire'
             .AddHangfire(opt =>
-             opt.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                .UseColouredConsoleLogProvider()
+             opt//.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                //.UseColouredConsoleLogProvider()
+                //.UseSimpleAssemblyNameTypeSerializer()
+                //.UseRecommendedSerializerSettings()
+                //.UseSQLiteStorage("Data Source=" + Path.Join(dir, "hangfire.db") + ";")
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseSQLiteStorage("Data Source=" + Path.Join(dir, "hangfire.db") + ";")
+                .UseSQLiteStorage(Path.Join(dir, "hangfire.db"))
             )
             .AddHangfireServer();
 

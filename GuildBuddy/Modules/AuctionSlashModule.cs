@@ -42,9 +42,9 @@ namespace GuildBuddy.Modules
             {
                 await db.SaveChangesAsync();
                 var auctionId = (ulong)auction.Property("Id").CurrentValue;
-                /*var jobId = _backgroundJobs.Schedule<AuctionService>(o => o.NotifyWinnerAsync(auctionId), TimeSpan.FromMinutes(1));
+                var jobId = _backgroundJobs.Schedule<AuctionService>(o => o.NotifyWinnerAsync(auctionId), TimeSpan.FromHours(hours));
                 auction.Property("JobId").CurrentValue = jobId;
-                await db.SaveChangesAsync();*/
+                await db.SaveChangesAsync();
                 await db.DisposeAsync();
                 var eb = new DiscordEmbedBuilder()
                 .WithTitle("Auction Created")
@@ -75,13 +75,13 @@ namespace GuildBuddy.Modules
 
             if (item == null)
             {
-                await ctx.CreateResponseAsync("The auction you are trying to bid on does not exist.", true);
+                await ctx.CreateResponseAsync("[Auction]: The auction you are trying to bid on does not exist.", true);
                 return;
             }
 
             if(bidAmount < 0)
             {
-                await ctx.CreateResponseAsync("[Auction] Bid amount must be greater than zero.", true);
+                await ctx.CreateResponseAsync("[Auction]: Bid amount must be greater than zero.", true);
                 return;
             }
 
@@ -125,6 +125,7 @@ namespace GuildBuddy.Modules
                 db.Auctions.Remove(auction);
                 await db.SaveChangesAsync();
                 await db.DisposeAsync();
+                _backgroundJobs.Delete(auction.JobId);
 
                 await ctx.CreateResponseAsync($"[Auction]: Deleted auction {id}({auction.Name}) from the database.");
             }

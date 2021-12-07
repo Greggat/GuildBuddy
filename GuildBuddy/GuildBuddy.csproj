@@ -8,9 +8,9 @@
   </PropertyGroup>
 	
   <ItemGroup>
-        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.19" />
-        <PackageReference Include="Hangfire.Core" Version="1.7.19" />
-        <PackageReference Include="Hangfire.SQLite" Version="1.4.2" />
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.27" />
+        <PackageReference Include="Hangfire.Core" Version="1.7.27" />
+        <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -19,7 +19,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="5.0.0" />
-        <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.1.0" />
         <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01051" />
 	    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.2.0-nightly-01051" />
 	    <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01051" />
