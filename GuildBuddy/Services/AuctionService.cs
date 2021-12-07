@@ -39,7 +39,7 @@ namespace GuildBuddy.Services
                             var eb = new DiscordEmbedBuilder()
                             .WithTitle("Auction Won!")
                             .WithDescription($"{winner.Mention} has won {auction.Name} for {auction.CurrentBid}!")
-                            .WithFooter($"AuctionId: {auction.Id}");
+                            .WithFooter($"ID: {auction.Id}");
                             await channel.SendMessageAsync(eb);
                         }
                     }
@@ -48,7 +48,7 @@ namespace GuildBuddy.Services
                         var eb = new DiscordEmbedBuilder()
                             .WithTitle("Auction Expired")
                             .WithDescription($"{auction.Name} expired with no bids!")
-                            .WithFooter($"AuctionId: {auction.Id}");
+                            .WithFooter($"ID: {auction.Id}");
                         await channel.SendMessageAsync(eb);
                     }
                 }
@@ -91,7 +91,6 @@ namespace GuildBuddy.Services
                     else
                         break;
                 }
-
                 page.Content = Formatter.BlockCode(contents.ToString());
                 result.Add(page);
             }
