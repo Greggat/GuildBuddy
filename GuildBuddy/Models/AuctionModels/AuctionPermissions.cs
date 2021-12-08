@@ -14,6 +14,7 @@ namespace GuildBuddy.Models.AuctionModels
         Bid = 2,
         Create = 4,
         Remove = 8,
-        All = short.MaxValue
+        All = short.MaxValue,   //0111 1111 1111 1111
+        Banned = short.MinValue //1000 0000 0000 0000
     }
 }

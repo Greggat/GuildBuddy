@@ -1,15 +1,14 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.EventArgs;
+using DSharpPlus.CommandsNext.Exceptions;
 using GuildBuddy.Modules;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace GuildBuddy.Services
 {
@@ -51,7 +50,24 @@ namespace GuildBuddy.Services
             slash.RegisterCommands<SlashModule>(688586051563946008);
             slash.RegisterCommands<AuctionSlashModule>(688586051563946008);
 
+            slash.SlashCommandErrored += OnSlashCommandErrored;
+
             await _discord.ConnectAsync();
+        }
+
+        private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+        {
+            if(e.Exception is SlashExecutionChecksFailedException ||
+                e.Exception is ChecksFailedException)
+            {
+                var eb = new DiscordEmbedBuilder()
+                    .WithTitle("Access Denied")
+                    .WithDescription("You do not have permission to access this command. Please contact an admin if you think this is a mistake.");
+
+                //Idk if commandsnext will have an interaction context?
+                await e.Context.CreateResponseAsync(eb, true);
+                e.Handled = true;
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

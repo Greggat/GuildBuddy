@@ -124,9 +124,19 @@ namespace GuildBuddy.Modules
             var auctions = db.Auctions.Where(auction => auction.GuildId == ctx.Guild.Id && auction.Expiration > DateTime.UtcNow).ToList();
             await db.DisposeAsync();
 
-            await ctx.Interaction.
-                SendPaginatedResponseAsync(true, ctx.User, _auctionService.GenerateAuctionPages(auctions), 
+            if(auctions.Count > 0)
+            {
+                await ctx.Interaction.
+                SendPaginatedResponseAsync(true, ctx.User, _auctionService.GenerateAuctionPages(auctions),
                 behaviour: PaginationBehaviour.Ignore);
+            }
+            else
+            {
+                var eb = new DiscordEmbedBuilder()
+                .WithTitle($"No Auctions Listed")
+                .WithDescription($"There are currently no auctions listed on this server.");
+                await ctx.CreateResponseAsync(eb, true);
+            }
         }
 
         [SlashRequireAuctionPermissions(AuctionPermissions.Remove)]
@@ -156,7 +166,7 @@ namespace GuildBuddy.Modules
         [SlashCommand("setrolepermissions", "Configure the auction permissions for a role on the server.")]
         public async Task SetRolePermissions(InteractionContext ctx, 
             [Option("role", "The role to add permissions to.")] DiscordRole role,
-            [Option("permissions", "none|view|bid|create|remove|all")] string permString)
+            [Option("permissions", "none|view|bid|create|remove|all|banned")] string permString)
         {
             var perms = permString.Split('|');
             AuctionPermissions permResult = 0;
@@ -171,7 +181,7 @@ namespace GuildBuddy.Modules
                 {
                     var eb = new DiscordEmbedBuilder()
                     .WithTitle($"Syntax Error")
-                    .WithDescription($"{perm} is not a valid permissions.\nAvailable permissions are view|bid|create|remove|all");
+                    .WithDescription($"{perm} is not a valid permissions.\nAvailable permissions are view|bid|create|remove|all|banned");
                     await ctx.CreateResponseAsync(eb);
                     return;
                 }

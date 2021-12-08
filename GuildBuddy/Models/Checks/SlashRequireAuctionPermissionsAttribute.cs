@@ -38,7 +38,7 @@ namespace GuildBuddy.Models.Checks
                 }
             }
 
-            return (perms & _requiredPerms) == _requiredPerms;
+            return ((perms & _requiredPerms) == _requiredPerms) && !perms.HasFlag(AuctionPermissions.Banned);
         }
     }
 }
