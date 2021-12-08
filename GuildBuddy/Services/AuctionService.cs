@@ -1,7 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
-using GuildBuddy.Data;
+using GuildBuddy.Models.AuctionModels;
 using GuildBuddy.Util;
 using System;
 using System.Collections.Concurrent;

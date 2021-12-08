@@ -2,7 +2,8 @@
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity;
-using GuildBuddy.Data;
+using GuildBuddy.Models.AuctionModels;
+using GuildBuddy.Models.Checks;
 using DSharpPlus.Interactivity.Extensions;
 using GuildBuddy.Services;
 using DSharpPlus.SlashCommands.Attributes;
@@ -23,7 +24,7 @@ namespace GuildBuddy.Modules
             _backgroundJobs = backgroundJobs;
         }
 
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequireAuctionPermissions(AuctionPermissions.Create)]
         [SlashCommand("create", "Create a new auction listing.")]
         public async Task Create(InteractionContext ctx, 
             [Option("name", "Name of item")] string itemName, 
@@ -60,6 +61,7 @@ namespace GuildBuddy.Modules
             }
         }
 
+        [SlashRequireAuctionPermissions(AuctionPermissions.Bid)]
         [SlashCommand("bid", "description")]
         public async Task Bid(InteractionContext ctx, 
             [Option("id", "Id of the item listing")] long auctionId, 
@@ -113,6 +115,7 @@ namespace GuildBuddy.Modules
             }
         }
 
+        [SlashRequireAuctionPermissions(AuctionPermissions.View)]
         [SlashCommand("display", "Display the active auctions.")]
         public async Task Display(InteractionContext ctx)
         {
@@ -126,7 +129,7 @@ namespace GuildBuddy.Modules
                 behaviour: PaginationBehaviour.Ignore);
         }
 
-        [SlashRequirePermissions(Permissions.Administrator)]
+        [SlashRequireAuctionPermissions(AuctionPermissions.Remove)]
         [SlashCommand("remove", "Remove an auction")]
         public async Task Remove(InteractionContext ctx,[Option("id", "Id of the auction to remove")] long id)
         {
@@ -147,6 +150,56 @@ namespace GuildBuddy.Modules
             }
             else
                 await ctx.CreateResponseAsync($"[Auction]: Could not find auction with Id: {id}.", true);
+        }
+
+        [SlashRequireUserPermissions(Permissions.Administrator)]
+        [SlashCommand("setrolepermissions", "Configure the auction permissions for a role on the server.")]
+        public async Task SetRolePermissions(InteractionContext ctx, 
+            [Option("role", "The role to add permissions to.")] DiscordRole role,
+            [Option("permissions", "none|view|bid|create|remove")] string permString)
+        {
+            var perms = permString.Split('|');
+            AuctionPermissions permResult = 0;
+
+            foreach(var perm in perms)
+            {
+                if(Enum.TryParse(typeof(AuctionPermissions), perm, true, out var parsedPerm))
+                {
+                    permResult |= (AuctionPermissions)parsedPerm;
+                }
+                else
+                {
+                    var eb = new DiscordEmbedBuilder()
+                    .WithTitle($"Syntax Error")
+                    .WithDescription($"{perm} is not a valid permissions.\nAvailable permissions are view|bid|create|remove");
+                    await ctx.CreateResponseAsync(eb);
+                    return;
+                }
+            }
+
+            using var db = new GuildBuddyContext();
+            var auctionRole = db.AuctionRoles.Where(o => o.RoleId == role.Id && o.GuildId == ctx.Guild.Id).FirstOrDefault();
+
+            if (auctionRole != null)
+            {
+                auctionRole.Permissions = permResult;
+            }
+            else
+            {
+                db.AuctionRoles.Add(new AuctionRole
+                {
+                    GuildId = ctx.Guild.Id,
+                    RoleId = role.Id,
+                    Permissions = permResult
+                });
+            }
+
+            await db.SaveChangesAsync();
+
+            var ebSuccess = new DiscordEmbedBuilder()
+                    .WithTitle($"Auction Role Permissions Saved")
+                    .WithDescription($"{role.Name} now contains the following permissions ({permResult.ToString()}).");
+            await ctx.CreateResponseAsync(ebSuccess);
         }
     }
 }

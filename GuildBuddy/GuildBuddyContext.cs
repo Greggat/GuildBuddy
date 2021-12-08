@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GuildBuddy.Models.AuctionModels;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +7,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GuildBuddy.Data
+namespace GuildBuddy
 {
     public class GuildBuddyContext : DbContext
     {
         public DbSet<Auction> Auctions { get; set; }
+        public DbSet<AuctionChannel> AuctionChannels { get; set; }
+        public DbSet<AuctionRole> AuctionRoles { get; set; }
         public string DbPath { get; }
 
         public GuildBuddyContext()
