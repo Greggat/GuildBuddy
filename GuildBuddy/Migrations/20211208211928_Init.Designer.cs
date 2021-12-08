@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GuildBuddy.Migrations
 {
     [DbContext(typeof(GuildBuddyContext))]
-    [Migration("20211208202904_Init")]
+    [Migration("20211208211928_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -83,6 +83,8 @@ namespace GuildBuddy.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("RoleId");
+
+                    b.HasIndex("GuildId");
 
                     b.ToTable("AuctionRoles");
                 });

@@ -82,6 +82,8 @@ namespace GuildBuddy.Migrations
 
                     b.HasKey("RoleId");
 
+                    b.HasIndex("GuildId");
+
                     b.ToTable("AuctionRoles");
                 });
 #pragma warning restore 612, 618

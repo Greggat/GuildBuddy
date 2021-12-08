@@ -156,7 +156,7 @@ namespace GuildBuddy.Modules
         [SlashCommand("setrolepermissions", "Configure the auction permissions for a role on the server.")]
         public async Task SetRolePermissions(InteractionContext ctx, 
             [Option("role", "The role to add permissions to.")] DiscordRole role,
-            [Option("permissions", "none|view|bid|create|remove")] string permString)
+            [Option("permissions", "none|view|bid|create|remove|all")] string permString)
         {
             var perms = permString.Split('|');
             AuctionPermissions permResult = 0;
@@ -171,7 +171,7 @@ namespace GuildBuddy.Modules
                 {
                     var eb = new DiscordEmbedBuilder()
                     .WithTitle($"Syntax Error")
-                    .WithDescription($"{perm} is not a valid permissions.\nAvailable permissions are view|bid|create|remove");
+                    .WithDescription($"{perm} is not a valid permissions.\nAvailable permissions are view|bid|create|remove|all");
                     await ctx.CreateResponseAsync(eb);
                     return;
                 }

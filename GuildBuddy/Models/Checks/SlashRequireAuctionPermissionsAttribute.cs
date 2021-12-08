@@ -21,17 +21,18 @@ namespace GuildBuddy.Models.Checks
 
         public override async Task<bool> ExecuteChecksAsync(InteractionContext ctx)
         {
+            //TODO: Cache these permissions or load on startup
             if (ctx.Member.Permissions.HasFlag(Permissions.Administrator))
                 return true;
 
             using var db = new GuildBuddyContext();
-            var rauctionRoles = db.AuctionRoles.Where(o => o.GuildId == ctx.Guild.Id).ToDictionary(o => o.RoleId, o => o);
+            var auctionPermissions = db.AuctionRoles.Where(o => o.GuildId == ctx.Guild.Id).ToDictionary(o => o.RoleId, o => o);
 
             AuctionPermissions perms = 0;
             
             foreach(var role in ctx.Member.Roles)
             {
-                if(rauctionRoles.TryGetValue(role.Id, out var rolePerms))
+                if(auctionPermissions.TryGetValue(role.Id, out var rolePerms))
                 {
                     perms |= rolePerms.Permissions;
                 }

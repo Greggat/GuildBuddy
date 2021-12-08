@@ -56,6 +56,11 @@ namespace GuildBuddy.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AuctionRoles_GuildId",
+                table: "AuctionRoles",
+                column: "GuildId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Auctions_GuildId",
                 table: "Auctions",
                 column: "GuildId");

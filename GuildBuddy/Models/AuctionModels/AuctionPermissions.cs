@@ -13,6 +13,7 @@ namespace GuildBuddy.Models.AuctionModels
         View = 1,
         Bid = 2,
         Create = 4,
-        Remove = 8
+        Remove = 8,
+        All = short.MaxValue
     }
 }
