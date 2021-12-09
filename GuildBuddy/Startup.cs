@@ -1,15 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using Hangfire;
-using Hangfire.AspNetCore;
+﻿using Hangfire;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DSharpPlus;
 using GuildBuddy.Services;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
 using System.Reflection;
 using Hangfire.Storage.SQLite;
 

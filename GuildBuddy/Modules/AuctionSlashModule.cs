@@ -24,10 +24,11 @@ namespace GuildBuddy.Modules
             _backgroundJobs = backgroundJobs;
         }
 
+        [SlashRequireAuctionChannelSet]
         [SlashRequireAuctionPermissions(AuctionPermissions.Create)]
         [SlashCommand("create", "Create a new auction listing.")]
-        public async Task Create(InteractionContext ctx, 
-            [Option("name", "Name of item")] string itemName, 
+        public async Task Create(InteractionContext ctx,
+            [Option("name", "Name of item")] string itemName,
             [Option("expiration", "How many hours to list the auction for.")] long hours,
             [Option("minimum_bid", "The minimum bid")] double minBid = 0)
         {
@@ -48,11 +49,13 @@ namespace GuildBuddy.Modules
                 await db.SaveChangesAsync();
                 await db.DisposeAsync();
                 var eb = new DiscordEmbedBuilder()
-                .WithTitle($"Auction Created - ID: {auctionId}")
-                .WithDescription($"Name: {itemName}\nExpires in {hours} hours.")
+                .WithTitle($"Auction Created")
+                .AddField("ID", auctionId.ToString(), true)
+                .AddField("Name", itemName, true)
+                .AddField("Expires", hours + "hr", true)
                 .WithFooter($"Use `/auction bid {auctionId} <bid amount>` to bid on this item.");
                 await ctx.CreateResponseAsync(eb);
-                
+
             }
             catch (Exception ex)
             {
@@ -63,15 +66,15 @@ namespace GuildBuddy.Modules
 
         [SlashRequireAuctionPermissions(AuctionPermissions.Bid)]
         [SlashCommand("bid", "description")]
-        public async Task Bid(InteractionContext ctx, 
-            [Option("id", "Id of the item listing")] long auctionId, 
+        public async Task Bid(InteractionContext ctx,
+            [Option("id", "Id of the item listing")] long auctionId,
             [Option("amount", "The amount you want to bid on the item")] double bidAmount)
         {
             using var db = new GuildBuddyContext();
             var bidder = ctx.User;
 
-            var auction = db.Auctions.Where(auction => 
-                                        auction.GuildId == ctx.Guild.Id && 
+            var auction = db.Auctions.Where(auction =>
+                                        auction.GuildId == ctx.Guild.Id &&
                                         auction.Id == (ulong)auctionId &&
                                         auction.Expiration > DateTime.UtcNow).FirstOrDefault();
 
@@ -84,7 +87,7 @@ namespace GuildBuddy.Modules
                 return;
             }
 
-            if(bidAmount < 0)
+            if (bidAmount < 0)
             {
                 var eb = new DiscordEmbedBuilder()
                 .WithTitle($"Bid Failed")
@@ -124,10 +127,10 @@ namespace GuildBuddy.Modules
             var auctions = db.Auctions.Where(auction => auction.GuildId == ctx.Guild.Id && auction.Expiration > DateTime.UtcNow).ToList();
             await db.DisposeAsync();
 
-            if(auctions.Count > 0)
+            if (auctions.Count > 0)
             {
                 await ctx.Interaction.
-                SendPaginatedResponseAsync(true, ctx.User, _auctionService.GenerateAuctionPages(auctions),
+                SendPaginatedResponseAsync(true, ctx.User, _auctionService.GenerateAuctionPagesV2(auctions),
                 behaviour: PaginationBehaviour.Ignore);
             }
             else
@@ -141,7 +144,7 @@ namespace GuildBuddy.Modules
 
         [SlashRequireAuctionPermissions(AuctionPermissions.Remove)]
         [SlashCommand("remove", "Remove an auction")]
-        public async Task Remove(InteractionContext ctx,[Option("id", "Id of the auction to remove")] long id)
+        public async Task Remove(InteractionContext ctx, [Option("id", "Id of the auction to remove")] long id)
         {
             using var db = new GuildBuddyContext();
 
@@ -164,16 +167,16 @@ namespace GuildBuddy.Modules
 
         [SlashRequireUserPermissions(Permissions.Administrator)]
         [SlashCommand("setrolepermissions", "Configure the auction permissions for a role on the server.")]
-        public async Task SetRolePermissions(InteractionContext ctx, 
+        public async Task SetRolePermissions(InteractionContext ctx,
             [Option("role", "The role to add permissions to.")] DiscordRole role,
             [Option("permissions", "none|view|bid|create|remove|all|banned")] string permString)
         {
             var perms = permString.Split('|');
             AuctionPermissions permResult = 0;
 
-            foreach(var perm in perms)
+            foreach (var perm in perms)
             {
-                if(Enum.TryParse(typeof(AuctionPermissions), perm, true, out var parsedPerm))
+                if (Enum.TryParse(typeof(AuctionPermissions), perm, true, out var parsedPerm))
                 {
                     permResult |= (AuctionPermissions)parsedPerm;
                 }
@@ -210,6 +213,32 @@ namespace GuildBuddy.Modules
                     .WithTitle($"Auction Role Permissions Saved")
                     .WithDescription($"{role.Name} now contains the following permissions ({permResult.ToString()}).");
             await ctx.CreateResponseAsync(ebSuccess);
+        }
+
+        [SlashRequireUserPermissions(Permissions.Administrator)]
+        [SlashCommand("setchannel", "Sets the auction notifications channel.")]
+        public async Task SetChannel(InteractionContext ctx)
+        {
+            using var db = new GuildBuddyContext();
+
+            var channel = db.AuctionChannels.Where(o => o.GuildId == ctx.Guild.Id).FirstOrDefault();
+
+            if (channel != null)
+            {
+                channel.ChannelId = ctx.Channel.Id;
+            }
+            else
+            {
+                db.AuctionChannels.Add(new AuctionChannel { ChannelId = ctx.Channel.Id, GuildId = ctx.Guild.Id });
+            }
+
+            _auctionService.UpdateNotificationChannel(ctx.Guild.Id, ctx.Channel.Id);
+            await db.SaveChangesAsync();
+
+            var eb = new DiscordEmbedBuilder()
+                    .WithTitle($"Auction Notifications Channel Set")
+                    .WithDescription($"Auction notifications will now be sent to {ctx.Channel.Name}.");
+            await ctx.CreateResponseAsync(eb);
         }
     }
 }

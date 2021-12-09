@@ -57,8 +57,7 @@ namespace GuildBuddy.Services
 
         private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
         {
-            if(e.Exception is SlashExecutionChecksFailedException ||
-                e.Exception is ChecksFailedException)
+            if(e.Exception is SlashExecutionChecksFailedException)
             {
                 var eb = new DiscordEmbedBuilder()
                     .WithTitle("Access Denied")
