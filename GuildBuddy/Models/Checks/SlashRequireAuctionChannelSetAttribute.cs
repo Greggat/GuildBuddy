@@ -1,13 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using GuildBuddy.Models.AuctionModels;
 using GuildBuddy.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GuildBuddy.Models.Checks
 {
@@ -19,13 +14,12 @@ namespace GuildBuddy.Models.Checks
 
         public override async Task<bool> ExecuteChecksAsync(InteractionContext ctx)
         {
-            //TODO: Get ChannelId from AuctionService if possible?...
-            using var db = new GuildBuddyContext();
-            var auctionChannel = db.AuctionChannels.Where(o => o.GuildId == ctx.Guild.Id).FirstOrDefault();
+            var service = ctx.Services.GetService<AuctionService>();
+            var channelId = service.GetNotificationChannelIdFromCache(ctx.Guild.Id);
 
-            if(auctionChannel is not null)
+            if(channelId != 0)
             {
-                var channel = ctx.Guild.GetChannel(auctionChannel.ChannelId);
+                var channel = ctx.Guild.GetChannel(channelId);
                 return channel is not null;
             }
             var eb = new DiscordEmbedBuilder()

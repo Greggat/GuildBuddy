@@ -3,6 +3,7 @@ using System;
 using GuildBuddy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GuildBuddy.Migrations
 {
     [DbContext(typeof(GuildBuddyContext))]
-    partial class GuildBuddyContextModelSnapshot : ModelSnapshot
+    [Migration("20220110154658_AddMinIncrementsAndAutoExtend")]
+    partial class AddMinIncrementsAndAutoExtend
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.0");

@@ -50,6 +50,9 @@ namespace GuildBuddy.Services
             slash.RegisterCommands<SlashModule>(688586051563946008);
             slash.RegisterCommands<AuctionSlashModule>(688586051563946008);
 
+            slash.RegisterCommands<SlashModule>(920138534826954822);
+            slash.RegisterCommands<AuctionSlashModule>(920138534826954822);
+
             slash.SlashCommandErrored += OnSlashCommandErrored;
 
             await _discord.ConnectAsync();

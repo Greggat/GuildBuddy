@@ -30,6 +30,11 @@ namespace GuildBuddy.Models.Checks
 
             AuctionPermissions perms = 0;
             
+            if (auctionPermissions.TryGetValue(ctx.Guild.Id, out var eRolePerm))
+            {
+                perms = eRolePerm.Permissions;
+            }
+
             foreach(var role in ctx.Member.Roles)
             {
                 if(auctionPermissions.TryGetValue(role.Id, out var rolePerms))

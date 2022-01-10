@@ -51,6 +51,9 @@ namespace GuildBuddy
                 Intents = DiscordIntents.AllUnprivileged
             }))
             .AddSingleton(Configuration)            // Add the configuration to the collection
+
+            .AddDbContext<GuildBuddyContext>()
+
             .AddSingleton<AttendenceEventService>()
             .AddSingleton<AuctionService>()
 

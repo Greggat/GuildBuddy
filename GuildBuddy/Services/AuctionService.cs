@@ -15,25 +15,36 @@ namespace GuildBuddy.Services
     public class AuctionService
     {
         private readonly DiscordClient _client;
-        private readonly ConcurrentDictionary<ulong, ulong> _auctionChannels;
+        private ConcurrentDictionary<ulong, ulong> _auctionChannels;
 
         public AuctionService(DiscordClient client)
         {
             _client = client;
-            _auctionChannels = new ConcurrentDictionary<ulong, ulong>();
 
             using var db = new GuildBuddyContext();
             _auctionChannels = new ConcurrentDictionary<ulong, ulong>(db.AuctionChannels.ToDictionary(o => o.GuildId, o => o.ChannelId));
+
+            _client.ComponentInteractionCreated += OnComponentInteractionCreated;
         }
 
-        public ulong GetNotificationChannelId(ulong guildId)
+        public async Task<DiscordChannel> GetNotificationChannelAsync(ulong guildId)
+        {
+            var channelId = GetNotificationChannelIdFromCache(guildId);
+            if (channelId != 0)
+            {
+                return await _client.GetChannelAsync(channelId);
+            }
+            return null;
+        }
+
+        public ulong GetNotificationChannelIdFromCache(ulong guildId)
         {
             if(_auctionChannels.TryGetValue(guildId, out ulong channelId))
                 return channelId;
             return 0;
         }
 
-        public void UpdateNotificationChannel(ulong guildId, ulong channelId)
+        public void UpdateNotificationChannelCache(ulong guildId, ulong channelId)
         {
             if (_auctionChannels.ContainsKey(guildId))
             {
@@ -50,8 +61,12 @@ namespace GuildBuddy.Services
             using var db = new GuildBuddyContext();
             var auction = db.Auctions.Where(o => o.Id == auctionId).FirstOrDefault();
             await db.DisposeAsync();
+
             try
             {
+                var guild = await _client.GetGuildAsync(auction.GuildId);
+                var notifyRole = guild.Roles.Values.Where(role => role.Name == $"AuctionNotify{auction.Id}").FirstOrDefault();
+
                 var channel = await _client.GetChannelAsync(_auctionChannels[auction.GuildId]);
                 if (auction is not null && channel is not null)
                 {
@@ -60,11 +75,20 @@ namespace GuildBuddy.Services
                         var winner = await _client.GetUserAsync(auction.BidderId);
                         if (winner is not null)
                         {
+                            var msg = new DiscordMessageBuilder();
                             var eb = new DiscordEmbedBuilder()
                             .WithTitle("Auction Won!")
                             .WithDescription($"{winner.Mention} has won {auction.Name} for {auction.CurrentBid}!")
                             .WithFooter($"ID: {auction.Id}");
-                            await channel.SendMessageAsync(eb);
+
+                            msg.AddEmbed(eb);
+                            if (notifyRole != null)
+                            {
+                                msg.WithContent(notifyRole.Mention);
+                                msg.Mentions.Add(new RoleMention(notifyRole));
+                            }
+
+                            await channel.SendMessageAsync(msg);
                         }
                     }
                     else
@@ -75,6 +99,9 @@ namespace GuildBuddy.Services
                             .WithFooter($"ID: {auction.Id}");
                         await channel.SendMessageAsync(eb);
                     }
+
+                    if (notifyRole is not null)
+                        await notifyRole.DeleteAsync();
                 }
                 else if (channel is null)
                     await SendChannelNotSetError(auction.GuildId);
@@ -175,6 +202,53 @@ namespace GuildBuddy.Services
 
             return result;
 
+        }
+
+        public DiscordRole GetNotificationRole(DiscordGuild guild, ulong auctionId)
+        {
+            return guild.Roles.Values.Where(role => role.Name == $"AuctionNotify{auctionId}").FirstOrDefault();
+        }
+
+        private async Task OnComponentInteractionCreated(DiscordClient sender, DSharpPlus.EventArgs.ComponentInteractionCreateEventArgs e)
+        {
+            if(e.Id == "notification_toggle")
+            {
+                var fields = e.Message.Embeds.FirstOrDefault().Fields;
+                if (fields == null)
+                    return;
+
+                var auctionIdField = fields.Where(field => field.Name == "ID").FirstOrDefault();
+                if (auctionIdField == null)
+                    return;
+
+                if (!ulong.TryParse(auctionIdField.Value, out var auctionId))
+                    return;
+
+                var notifyRole = GetNotificationRole(e.Guild, auctionId);
+                if (notifyRole == null)
+                    return;
+
+                var member = await e.Guild.GetMemberAsync(e.User.Id);
+
+                DiscordEmbedBuilder eb;
+                if(!member.Roles.Contains(notifyRole))
+                {
+                    await member.GrantRoleAsync(notifyRole);
+                    eb = new DiscordEmbedBuilder()
+                    .WithTitle("Auction Nofications")
+                    .WithDescription("The notification role for this auction has been added to your profile.");
+                }
+                else
+                {
+                    await member.RevokeRoleAsync(notifyRole);
+                    eb = new DiscordEmbedBuilder()
+                    .WithTitle("Auction Nofications")
+                    .WithDescription("The notification role for this auction has been removed from your profile.");
+                }
+
+                var response = new DiscordInteractionResponseBuilder().AddEmbed(eb).AsEphemeral(true);
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,response);
+            }
         }
     }
 }
