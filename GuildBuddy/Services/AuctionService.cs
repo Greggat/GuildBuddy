@@ -85,7 +85,7 @@ namespace GuildBuddy.Services
                             if (notifyRole != null)
                             {
                                 msg.WithContent(notifyRole.Mention);
-                                msg.Mentions.Add(new RoleMention(notifyRole));
+                                msg.WithAllowedMention(new RoleMention(notifyRole));
                             }
 
                             await channel.SendMessageAsync(msg);
@@ -213,7 +213,7 @@ namespace GuildBuddy.Services
         {
             if(e.Id == "notification_toggle")
             {
-                var fields = e.Message.Embeds.FirstOrDefault().Fields;
+                var fields = e.Message.Embeds.FirstOrDefault()?.Fields;
                 if (fields == null)
                     return;
 

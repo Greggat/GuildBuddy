@@ -109,7 +109,8 @@ namespace GuildBuddy.Modules
                 return;
             }
 
-            if (bidAmount >= (auction.CurrentBid + auction.MinIncrement) || auction.BidderId == 0)
+            if ((bidAmount > auction.CurrentBid && bidAmount >= (auction.CurrentBid + auction.MinIncrement))
+                || auction.BidderId == 0)
             {
                 auction.BidderId = bidder.Id;
                 auction.BidderName = bidder.Username;
